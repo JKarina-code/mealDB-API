@@ -96,7 +96,9 @@ function initApp() {
       const recipeButton = document.createElement("BUTTON");
       recipeButton.classList.add("btn", "btn-danger", "w-100");
       recipeButton.textContent = "Show Recipe";
-
+      recipeButton.onclick = function () {
+        chooseRecipe(idMeal);
+      };
       cardBody.appendChild(recipeHeading);
       cardBody.appendChild(recipeButton);
 
@@ -108,6 +110,94 @@ function initApp() {
     });
   }
 
+  function chooseRecipe(idMeal) {
+    const url = `https://themealdb.com/api/json/v1/1/lookup.php?i=${idMeal}`;
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => showRecipesModal(data.meals[0]));
+  }
+
+  function showRecipesModal(recipe) {
+    const modal = new bootstrap.Modal(document.querySelector("#modal"));
+    const { idMeal, strInstructions, strMeal, strMealThumb } = recipe;
+
+    const modalTitle = document.querySelector(".modal .modal-title");
+    const modalBody = document.querySelector(".modal .modal-body");
+    modalTitle.textContent = strMeal;
+    modalBody.innerHTML = `
+    <img class="img-fluid" src="${strMealThumb}" alt="recipe ${strMeal}" />
+    <h3 class="my-3">Instructions</h3>
+    <p>${strInstructions}</p>
+    <h3 class="my-3">Ingredients and amounts</h3>
+`;
+
+    //Show ingredients
+
+    const listGroup = document.createElement("UL");
+    listGroup.classList.add("list-group");
+    for (let i = 1; i <= 20; i++) {
+      if (recipe[`strIngredient${i}`]) {
+        const ingredient = recipe[`strIngredient${i}`];
+        const amount = recipe[`strMeasure${i}`];
+        const ingredientLi = document.createElement("LI");
+        ingredientLi.classList.add("list-group-item");
+        ingredientLi.textContent = `${ingredient}  - ${amount}`;
+
+        listGroup.appendChild(ingredientLi);
+      }
+    }
+    modalBody.appendChild(listGroup);
+    const modalFooter = document.querySelector(".modal-footer");
+    cleanHTML(modalFooter);
+    const btnFavorite = document.createElement("BUTTON");
+    btnFavorite.classList.add("btn", "btn-danger", "col");
+    btnFavorite.textContent = existLocalStorage(idMeal)
+      ? "Delete Favorite"
+      : "Save Favorite";
+
+    //LocalStorage
+    btnFavorite.onclick = function () {
+      if (existLocalStorage(idMeal)) {
+        deleteFavorite(idMeal);
+        btnFavorite.textContent = "Save Favorite";
+        return;
+      }
+      addFavorite({
+        id: idMeal,
+        title: strMeal,
+        image: strMealThumb,
+      });
+
+      btnFavorite.textContent = "Delete Favorite";
+    };
+
+    const btnClose = document.createElement("BUTTON");
+    btnClose.classList.add("btn", "btn-secondary", "col");
+    btnClose.textContent = "Close";
+    btnClose.onclick = function () {
+      modal.hide();
+    };
+
+    modalFooter.appendChild(btnFavorite);
+    modalFooter.appendChild(btnClose);
+    modal.show();
+  }
+  function addFavorite(recipe) {
+    const favorites = JSON.parse(localStorage.getItem("favorites")) ?? [];
+    localStorage.setItem("favorites", JSON.stringify([...favorites, recipe]));
+  }
+
+  function deleteFavorite(id) {
+    const favorites = JSON.parse(localStorage.getItem("favorites")) ?? [];
+    const newFavorites = favorites.filter((favorite) => favorite.id !== id);
+    localStorage.setItem("favorites", JSON.stringify(newFavorites));
+  }
+
+  function existLocalStorage(id) {
+    const favorites = JSON.parse(localStorage.getItem("favorites")) ?? [];
+    return favorites.some((favorite) => favorite.id === id);
+  }
   function cleanHTML(selector) {
     while (selector.firstChild) {
       selector.removeChild(selector.firstChild);
