@@ -161,6 +161,8 @@ function initApp() {
       if (existLocalStorage(idMeal)) {
         deleteFavorite(idMeal);
         btnFavorite.textContent = "Save Favorite";
+        showToast("Successfully Deleted");
+        modal.hide();
         return;
       }
       addFavorite({
@@ -170,6 +172,8 @@ function initApp() {
       });
 
       btnFavorite.textContent = "Delete Favorite";
+      showToast("Successfully Added");
+      modal.hide();
     };
 
     const btnClose = document.createElement("BUTTON");
@@ -198,6 +202,15 @@ function initApp() {
     const favorites = JSON.parse(localStorage.getItem("favorites")) ?? [];
     return favorites.some((favorite) => favorite.id === id);
   }
+
+  function showToast(message) {
+    const toastDiv = document.querySelector("#toast");
+    const toastBody = document.querySelector(".toast-body");
+    toastBody.textContent = message;
+    const toast = new bootstrap.Toast(toastDiv);
+    toast.show();
+  }
+
   function cleanHTML(selector) {
     while (selector.firstChild) {
       selector.removeChild(selector.firstChild);
