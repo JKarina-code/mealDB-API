@@ -1,19 +1,33 @@
 function initApp() {
+  const result = document.querySelector("#result");
   const selectCategories = document.querySelector("#categories");
-  selectCategories.addEventListener("change", chooseCategory);
 
-  getStart();
+  if (selectCategories) {
+    getCategories();
+    selectCategories.addEventListener("change", chooseCategory);
+  }
 
-  function getStart() {
+  const favoritesDiv = document.querySelector(".favorites");
+
+  if (favoritesDiv) {
+    getFavoritesLocal();
+  }
+
+  function getCategories() {
     const url = "https://www.themealdb.com/api/json/v1/1/categories.php";
     fetch(url)
       .then((response) => response.json())
-      .then((data) => showImagesStart(data.categories));
+      .then((data) => showCategories(data.categories));
   }
-  function showImagesStart(images = []) {
-    images.forEach((image) => {
-      const { strCategory, strCategoryThumb } = image;
 
+  function showCategories(categories = []) {
+    categories.forEach((category) => {
+      const { strCategory, strCategoryThumb } = category;
+      const option = document.createElement("OPTION");
+      option.value = strCategory;
+      option.textContent = strCategory;
+      selectCategories.appendChild(option);
+      //Show Images of categories
       const divStart = document.createElement("DIV");
       divStart.classList.add("col-md-4");
 
@@ -38,23 +52,6 @@ function initApp() {
     });
   }
 
-  getCategories();
-  function getCategories() {
-    const url = "https://www.themealdb.com/api/json/v1/1/categories.php";
-    fetch(url)
-      .then((response) => response.json())
-      .then((data) => showCategories(data.categories));
-  }
-  function showCategories(categories = []) {
-    categories.forEach((category) => {
-      const { strCategory } = category;
-      const option = document.createElement("OPTION");
-      option.value = strCategory;
-      option.textContent = strCategory;
-      selectCategories.appendChild(option);
-    });
-  }
-
   function chooseCategory(e) {
     const category = e.target.value;
     url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`;
@@ -74,7 +71,7 @@ function initApp() {
 
     recipes.forEach((recipe) => {
       const { strMeal, strMealThumb, idMeal } = recipe;
-      const result = document.querySelector("#result");
+
       const recipeContent = document.createElement("DIV");
       recipeContent.classList.add("col-md-4");
 
@@ -83,21 +80,21 @@ function initApp() {
 
       const recipeIMG = document.createElement("IMG");
       recipeIMG.classList.add("card-img-top");
-      recipeIMG.alt = `Image of recipe ${strMeal}`;
-      recipeIMG.src = `${strMealThumb}`;
+      recipeIMG.alt = `Image of recipe ${strMeal ?? recipe.title}`;
+      recipeIMG.src = strMealThumb ?? recipe.image;
 
       const cardBody = document.createElement("DIV");
       cardBody.classList.add("card-body");
 
       const recipeHeading = document.createElement("H2");
       recipeHeading.classList.add("card-title", "mb-3");
-      recipeHeading.textContent = strMeal;
+      recipeHeading.textContent = strMeal ?? recipe.title;
 
       const recipeButton = document.createElement("BUTTON");
       recipeButton.classList.add("btn", "btn-danger", "w-100");
       recipeButton.textContent = "Show Recipe";
       recipeButton.onclick = function () {
-        chooseRecipe(idMeal);
+        chooseRecipe(idMeal ?? recipe.id);
       };
       cardBody.appendChild(recipeHeading);
       cardBody.appendChild(recipeButton);
@@ -211,6 +208,18 @@ function initApp() {
     toast.show();
   }
 
+  function getFavoritesLocal() {
+    const favorites = JSON.parse(localStorage.getItem("favorites") ?? []);
+    if (favorites.length) {
+      showRecipes(favorites);
+      return;
+    }
+
+    const noFavorites = document.createElement("P");
+    noFavorites.textContent = "No favorites yet";
+    noFavorites.classList.add("fs-4", "text-center", "font-bold", "mt-5");
+    result.appendChild(noFavorites);
+  }
   function cleanHTML(selector) {
     while (selector.firstChild) {
       selector.removeChild(selector.firstChild);
