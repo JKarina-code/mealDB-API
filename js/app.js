@@ -58,10 +58,10 @@ function initApp() {
 
     fetch(url)
       .then((response) => response.json())
-      .then((data) => showRecipes(data.meals));
+      .then((data) => showMeals(data.meals));
   }
 
-  function showRecipes(recipes = []) {
+  function showMeals(recipes = []) {
     cleanHTML(result);
 
     const heading = document.createElement("H2");
@@ -211,7 +211,7 @@ function initApp() {
   function getFavoritesLocal() {
     const favorites = JSON.parse(localStorage.getItem("favorites") ?? []);
     if (favorites.length) {
-      showRecipes(favorites);
+      showMeals(favorites);
       return;
     }
 
